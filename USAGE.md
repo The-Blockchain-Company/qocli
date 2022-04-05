@@ -1,0 +1,621 @@
+# CNCLI Usage
+
+## Commands & Examples
+
+### Ping Command
+
+This command validates that the remote server is on the given network and returns its response time.
+
+#### Show Ping Help
+
+```bash
+qocli ping --help
+qocli-ping 0.1.0
+
+USAGE:
+    qocli ping [OPTIONS] --host <host>
+
+FLAGS:
+        --help       Prints help information
+    -V, --version    Prints version information
+
+OPTIONS:
+    -h, --host <host>                      bcc-node hostname to connect to
+        --network-magic <network-magic>    network magic. [default: 764824073]
+    -p, --port <port>                      bcc-node port [default: 3001]
+```
+
+#### Example Mainnet ping using defaults
+
+```bash
+qocli ping --host north-america.relays-new.bcc-mainnet.blockchain-company.io
+```
+
+##### Ping Success Result
+
+```bash
+{
+ "status": "ok",
+ "host": "north-america.relays-new.bcc-mainnet.blockchain-company.io",
+ "port": 3001,
+ "connectDurationMs": 98,
+ "durationMs": 118
+}
+```
+
+#### Example Mainnet ping timeout failure
+
+```bash
+qocli ping --host north-america.relays-new.bcc-mainnet.blockchain-company.io --port 9999
+```
+
+##### Ping Failure Result
+
+```bash
+{
+ "status": "error",
+ "host": "north-america.relays-new.bcc-mainnet.blockchain-company.io",
+ "port": 9999,
+ "errorMessage": "Failed to connect: connection timed out"
+}
+```
+
+#### Example ping to testnet node with mainnet magic failure
+
+```bash
+qocli ping --host north-america.relays-new.bcc-testnet.blockchain-company.io
+```
+
+##### Ping Magic Failure Result
+
+```bash
+{
+ "status": "error",
+ "host": "north-america.relays-new.bcc-testnet.blockchain-company.io",
+ "port": 3001,
+ "errorMessage": "version data mismatch: NodeToNodeVersionData {networkMagic = NetworkMagic {unNetworkMagic = 1097911063}, diffusionMode = InitiatorAndResponderDiffusionMode} /= NodeToNodeVersionData {networkMagic = NetworkMagic {unNetworkMagic = 764824073}, diffusionMode = InitiatorAndResponderDiffusionMode}"
+}
+```
+
+#### Example ping to testnet success
+
+```bash
+qocli ping --host north-america.relays-new.bcc-testnet.blockchain-company.io --port 3001 --network-magic 1097911063
+```
+
+##### Ping Testnet Success Result
+
+```bash
+{
+ "status": "ok",
+ "host": "north-america.relays-new.bcc-testnet.blockchain-company.io",
+ "port": 3001,
+ "connectDurationMs": 18,
+ "durationMs": 38
+}
+```
+
+### Sync Command
+
+This command connects to a remote node and synchronizes blocks to a local sqlite database. The ```validate``` and ```leaderlog``` commands require a synchronized database.
+
+**Note**: to setup ```qocli sync``` as a ```systemd``` service, please refer to the [installation guide](INSTALL.md). When enabled as ```systemd``` service, ```sync``` will continuously keep the ```qocli.db``` database synchronized.
+
+#### Show Sync Help
+
+```bash
+qocli sync --help
+qocli-sync 0.5.10
+
+USAGE:
+    qocli sync [FLAGS] [OPTIONS] --host <host>
+
+FLAGS:
+        --help          Prints help information
+        --no-service    Exit at 100% synced.
+    -V, --version       Prints version information
+
+OPTIONS:
+    -d, --db <db>                          sqlite database file [default: ./qocli.db]
+    -h, --host <host>                      bcc-node hostname to connect to
+        --network-magic <network-magic>    network magic. [default: 764824073]
+    -p, --port <port>                      bcc-node port [default: 3001]
+```
+
+#### Example sync command
+
+```bash
+qocli sync --host 127.0.0.1 --port 3000
+```
+
+##### Sync Result
+
+```bash
+2020-10-31T16:55:35.025Z INFO  qocli::nodeclient > Starting NodeClient...
+2020-10-31T16:55:35.025Z INFO  qocli::nodeclient::protocols::mux_protocol > Connecting to 127.0.0.1:3000 ...
+2020-10-31T16:55:35.030Z WARN  qocli::nodeclient::protocols::handshake_protocol > HandshakeProtocol::State::Done
+2020-10-31T16:55:35.110Z WARN  qocli::nodeclient::protocols::transaction_protocol > TxSubmissionProtocol::State::Done
+2020-10-31T16:55:35.110Z WARN  qocli::nodeclient::protocols::chainsync_protocol   > rollback to slot: 4492799
+2020-10-31T16:55:35.114Z INFO  qocli::nodeclient::protocols::chainsync_protocol   > block 4490511 of 4891060, 91.81% synced
+2020-10-31T16:55:40.646Z INFO  qocli::nodeclient::protocols::chainsync_protocol   > block 4519089 of 4891061, 92.39% synced
+2020-10-31T16:55:46.341Z INFO  qocli::nodeclient::protocols::chainsync_protocol   > block 4544646 of 4891061, 92.92% synced
+2020-10-31T16:55:52.012Z INFO  qocli::nodeclient::protocols::chainsync_protocol   > block 4567647 of 4891061, 93.39% synced
+2020-10-31T16:55:57.815Z INFO  qocli::nodeclient::protocols::chainsync_protocol   > block 4594692 of 4891062, 93.94% synced
+2020-10-31T16:56:03.793Z INFO  qocli::nodeclient::protocols::chainsync_protocol   > block 4624024 of 4891063, 94.54% synced
+2020-10-31T16:56:09.814Z INFO  qocli::nodeclient::protocols::chainsync_protocol   > block 4653024 of 4891063, 95.13% synced
+2020-10-31T16:56:15.808Z INFO  qocli::nodeclient::protocols::chainsync_protocol   > block 4678390 of 4891063, 95.65% synced
+2020-10-31T16:56:21.856Z INFO  qocli::nodeclient::protocols::chainsync_protocol   > block 4704799 of 4891063, 96.19% synced
+2020-10-31T16:56:27.887Z INFO  qocli::nodeclient::protocols::chainsync_protocol   > block 4730288 of 4891063, 96.71% synced
+2020-10-31T16:56:34.167Z INFO  qocli::nodeclient::protocols::chainsync_protocol   > block 4756308 of 4891063, 97.24% synced
+2020-10-31T16:56:40.340Z INFO  qocli::nodeclient::protocols::chainsync_protocol   > block 4782723 of 4891064, 97.78% synced
+2020-10-31T16:56:46.448Z INFO  qocli::nodeclient::protocols::chainsync_protocol   > block 4806428 of 4891064, 98.27% synced
+2020-10-31T16:56:52.675Z INFO  qocli::nodeclient::protocols::chainsync_protocol   > block 4831364 of 4891064, 98.78% synced
+2020-10-31T16:56:59.101Z INFO  qocli::nodeclient::protocols::chainsync_protocol   > block 4863279 of 4891065, 99.43% synced
+2020-10-31T16:57:05.576Z INFO  qocli::nodeclient::protocols::chainsync_protocol   > block 4889661 of 4891065, 99.97% synced
+2020-10-31T16:57:17.958Z INFO  qocli::nodeclient::protocols::chainsync_protocol   > block 4891066 of 4891066, 100.00% synced
+2020-10-31T16:57:30.927Z INFO  qocli::nodeclient::protocols::chainsync_protocol   > block 4891067 of 4891067, 100.00% synced
+```
+
+### Status Command
+
+This simple command gives you an ok if the database is fully synced. It will return a status of error if not.
+
+#### Show Status Help
+
+```bash
+qocli status --help
+qocli-status 0.2.5
+
+USAGE:
+    qocli status [OPTIONS] --byron-genesis <byron-genesis> --sophie-genesis <sophie-genesis>
+
+FLAGS:
+    -h, --help       Prints help information
+    -V, --version    Prints version information
+
+OPTIONS:
+        --byron-genesis <byron-genesis>        byron genesis json file
+    -d, --db <db>                              sqlite database file [default: ./qocli.db]
+        --sophie-genesis <sophie-genesis>    sophie genesis json file
+```
+
+#### Status when fully synced
+
+```bash
+qocli status --byron-genesis ~/haskell/local/byron-genesis.json --sophie-genesis ~/haskell/local/sophie-genesis.json
+```
+
+##### Fully Synced Result
+
+```bash
+{
+ "status": "ok"
+}
+```
+
+#### Status when not fully synced
+
+```bash
+qocli status --byron-genesis ~/haskell/local/byron-genesis.json --sophie-genesis ~/haskell/local/sophie-genesis.json --db dummy.db
+```
+
+##### Not In Sync Result
+
+```bash
+{
+ "status": "error",
+ "errorMessage": "db not fully synced!"
+}
+```
+
+### Validate Command
+
+This command validates that a block hash or partial block hash is on-chain. You must run ```sync``` command separately to build up the database and have it sync to 100%.
+
+#### Show Validate Help
+
+```bash
+qocli validate --help
+qocli-validate 0.1.0
+
+USAGE:
+    qocli validate [OPTIONS] --hash <hash>
+
+FLAGS:
+    -h, --help       Prints help information
+    -V, --version    Prints version information
+
+OPTIONS:
+    -d, --db <db>        sqlite database file [default: ./qocli.db]
+        --hash <hash>    full or partial block hash to validate
+```
+
+#### Validate block success
+
+```bash
+qocli validate --hash 0c4b73
+```
+
+##### Validate Success Result
+
+```bash
+{
+ "status": "ok",
+ "block_number": "4891104",
+ "slot_number": "12597768",
+ "hash": "0c4b730183ab2533d423f9af56ed99efd8121f716f82aa95caa3e6c11f10dc8d",
+ "prev_hash": "2142685e0912f1956c99551431270c1e199b85cde57fe56554d23ce111504fe9",
+ "leader_vrf": "000111925d12aea26b1705ef244fe8930f437be294180b418fba47ebf386e73d5ec7bbd397df5ba44d085171a66266089fba10a089442e207d7ad730849f9293"
+}
+```
+
+#### Validate block orphaned
+
+```bash
+qocli validate --hash af6d8e
+```
+
+##### Validate Orphaned Result
+
+```bash
+{
+ "status": "orphaned",
+ "block_number": "4891104",
+ "slot_number": "12597768",
+ "hash": "af6d8e8a21bd65b6542fecc51da82e59824ad51c43fb2bbc0dcd0c8f20f2adae",
+ "prev_hash": "2142685e0912f1956c99551431270c1e199b85cde57fe56554d23ce111504fe9",
+ "leader_vrf": "000c6abd406175af91def3c225fb758370d26e506275a9574eb88ebb886490f3a4a6d971c822193bb3a186b8c3d75c890f61bff09fbf7f0066b152a2707f9929"
+}
+```
+
+#### Validate block missing
+
+```bash
+qocli validate --hash ffffff
+```
+
+##### Validate Missing Result
+
+```bash
+{
+ "status": "error",
+ "errorMessage": "Query returned no rows"
+}
+```
+
+### Nonce Command
+
+This command calculates the epoch nonce value. This command requires that you use the ```sync``` command above to build a 100% synchronized ```qocli.db``` database file.
+
+#### Show Nonce Help
+
+```bash
+$ qocli nonce --help
+qocli-nonce 4.0.0
+
+USAGE:
+    qocli nonce [OPTIONS] --byron-genesis <byron-genesis> --sophie-genesis <sophie-genesis>
+
+FLAGS:
+    -h, --help       Prints help information
+    -V, --version    Prints version information
+
+OPTIONS:
+        --byron-genesis <byron-genesis>        byron genesis json file
+    -d, --db <db>                              sqlite database file [default: ./qocli.db]
+        --extra-entropy <extra-entropy>        hex string of the extra entropy value
+        --ledger-set <ledger-set>              Which ledger data to use. prev - previous epoch, current - current epoch,
+                                               next - future epoch [default: current]
+        --sophie-genesis <sophie-genesis>    sophie genesis json file
+```
+
+#### Calculate nonce
+
+```bash
+qocli nonce --byron-genesis ~/haskell/test/byron-genesis.json --sophie-genesis ~/haskell/test/sophie-genesis.json --ledger-set next
+```
+
+##### Nonce Result
+
+```bash
+60d68963ece4f16a30934f473fc3be51526f7c6ff2ac0b3f8a40a38623411f8e
+```
+
+### Leaderlog Command
+
+This command calculates a stake pool's expected slot list. ```prev``` and ```current``` logs are available as long as you have a synchronized database. ```next``` logs are only available 1.5 days before the end of the epoch. You need to use ```.poolStakeMark``` and ```.activeStakeMark``` for ```next```, ```.poolStakeSet``` and ```.activeStakeSet``` for ```current```, ```.poolStakeGo``` and ```.activeStakeGo``` for ```prev```.
+
+Example usage with the ```stake-snapshot```:
+
+```bash
+/home/westbam/.cargo/bin/qocli sync --host 127.0.0.1 --port 6000 --no-service
+echo "BCSH"
+SNAPSHOT=$(/home/westbam/.local/bin/bcc-cli query stake-snapshot --stake-pool-id 00beef0a9be2f6d897ed24a613cf547bb20cd282a04edfc53d477114 --mainnet)
+POOL_STAKE=$(echo "$SNAPSHOT" | grep -oP '(?<=    "poolStakeMark": )\d+(?=,?)')
+ACTIVE_STAKE=$(echo "$SNAPSHOT" | grep -oP '(?<=    "activeStakeMark": )\d+(?=,?)')
+BCSH=`/home/westbam/.cargo/bin/qocli leaderlog --pool-id 00beef0a9be2f6d897ed24a613cf547bb20cd282a04edfc53d477114 --pool-vrf-skey ./bcsh.vrf.skey --byron-genesis /home/westbam/haskell/local/byron-genesis.json --sophie-genesis /home/westbam/haskell/local/sophie-genesis.json --pool-stake $POOL_STAKE --active-stake $ACTIVE_STAKE --ledger-set next`
+
+EPOCH=`jq .epoch <<< $BCSH`
+echo "\`Epoch $EPOCH\` 🧙🔮:"
+
+SLOTS=`jq .epochSlots <<< $BCSH`
+IDEAL=`jq .epochSlotsIdeal <<< $BCSH`
+PERFORMANCE=`jq .maxPerformance <<< $BCSH`
+echo "\`BCSH  - $SLOTS \`🎰\`,  $PERFORMANCE% \`🍀max, \`$IDEAL\` 🧱ideal"
+```
+
+**Note**: to automate calculating your assigned slots and sending them to [PoolTool](https://pooltool.io/), please refer to the [installation guide](INSTALL.md).
+
+#### Show Leaderlog Help
+
+```bash
+qocli-leaderlog 4.0.1
+
+USAGE:
+    qocli leaderlog [OPTIONS] --active-stake <active-stake> --byron-genesis <byron-genesis> --pool-id <pool-id> --pool-stake <pool-stake> --pool-vrf-skey <pool-vrf-skey> --sophie-genesis <sophie-genesis>
+
+FLAGS:
+    -h, --help       Prints help information
+    -V, --version    Prints version information
+
+OPTIONS:
+        --active-stake <active-stake>          total active stake snapshot value in entropic
+        --byron-genesis <byron-genesis>        byron genesis json file
+        --d <d>                                decentralization parameter [default: 0]
+    -d, --db <db>                              sqlite database file [default: ./qocli.db]
+        --extra-entropy <extra-entropy>        hex string of the extra entropy value
+        --ledger-set <ledger-set>              Which ledger data to use. prev - previous epoch, current - current epoch,
+                                               next - future epoch [default: current]
+        --pool-id <pool-id>                    lower-case hex pool id
+        --pool-stake <pool-stake>              pool active stake snapshot value in entropic
+        --pool-vrf-skey <pool-vrf-skey>        pool's vrf.skey file
+        --sophie-genesis <sophie-genesis>    sophie genesis json file
+        --tz <timezone>                        TimeZone string from the IANA database -
+                                               https://en.wikipedia.org/wiki/List_of_tz_database_time_zones [default:
+                                               America/Los_Angeles]
+```
+
+#### Calculate leaderlog
+
+```bash
+qocli leaderlog --pool-id 00beef0a9be2f6d897ed24a613cf547bb20cd282a04edfc53d477114 --pool-vrf-skey ./bcsh.vrf.skey --byron-genesis /home/westbam/haskell/local/byron-genesis.json --sophie-genesis /home/westbam/haskell/local/sophie-genesis.json --pool-stake $POOL_STAKE --active-stake $ACTIVE_STAKE --ledger-set current
+```
+
+##### Leaderlog Success Result
+
+```bash
+{
+  "status": "ok",
+  "epoch": 227,
+  "epochNonce": "0e534dd41bb80bfff4a16d038eb52280e9beac7545cc32c9bfc253a6d92010d1",
+  "poolId": "00beef284975ef87856c1343f6bf50172253177fdebc756524d43fc1",
+  "sigma": 0.0028306163817569175,
+  "d": 0,
+  "assignedSlots": [
+    ...
+    {
+      "slot": 13083245,
+      "slotInEpoch": 382445,
+      "at": "2020-11-05T23:58:56-08:00"
+    },
+    {
+      "slot": 13106185,
+      "slotInEpoch": 405385,
+      "at": "2020-11-06T06:21:16-08:00"
+    }
+    ...
+  ]
+}
+```
+
+#### Calculate leaderlog failure (too soon for "next" logs, or un-synchronized database)
+
+```bash
+qocli leaderlog --pool-id 00beef0a9be2f6d897ed24a613cf547bb20cd282a04edfc53d477114 --pool-vrf-skey ./bcsh.vrf.skey --byron-genesis /home/westbam/haskell/local/byron-genesis.json --sophie-genesis /home/westbam/haskell/local/sophie-genesis.json --pool-stake $POOL_STAKE --active-stake $ACTIVE_STAKE --ledger-set next
+```
+
+##### Leaderlog Too Soon Result
+
+```bash
+{
+ "status": "error",
+ "errorMessage": "Query returned no rows"
+}
+```
+
+### Sendtip command
+
+The sendtip command is used to communicate with [pooltool.io](https://pooltool.io) so you can have a green badge on their website with your current tip height.
+
+![pooltool tip image](images/pooltool_sendtip.png)
+
+It is important to point this command at your core nodes. This will help pooltool capture any orphan blocks. There is no guarantee that an orphan block you make will be seen by pooltool. Pointing to your core nodes should help with that.
+
+**Note**: to setup ```qocli sendtip``` as a ```systemd``` service, please refer to the [installation guide](INSTALL.md). When enabled as ```systemd``` service, ```sendtip``` will continuously send your stake pool ```tip``` to PoolTool.
+
+
+#### Sendtip help
+
+```bash
+qocli sendtip --help
+qocli-sendtip 0.2.2
+
+USAGE:
+    qocli sendtip [OPTIONS] --bcc-node <bcc-node>
+
+FLAGS:
+    -h, --help       Prints help information
+    -V, --version    Prints version information
+
+OPTIONS:
+        --bcc-node <bcc-node>    path to bcc-node executable for gathering version info
+        --config <config>                pooltool config file for sending tips [default: ./pooltool.json]
+```
+
+#### Configuring pooltool.json
+
+You need to create a pooltool.json file so that the sendtip command knows what node(s) to connect to. It also contains your pooltool configuration. Your pooltool api key can be found on your pooltool profile page.
+
+```json
+{
+  "api_key": "XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX",
+  "pools": [
+    ...
+      {
+          "name": "TCKR",
+          "pool_id": "a7398d649be2f6d897ed24a613cf547bb20cd282a04edfc53d477114",
+          "host" : "123.123.123.12",
+          "port": 3001
+      },
+      {
+          "name": "TCKR1",
+          "pool_id": "b73d891285526062d41cd7293746048c6a9a13ab8b591920cf40c706",
+          "host" : "123.123.123.35",
+          "port": 3001
+      },
+    ...
+  ]
+}
+```
+
+#### Sending tips to pooltool
+
+```bash
+qocli sendtip --bcc-node /usr/local/bin/bcc-node --config /root/scripts/pooltool.json
+```
+
+##### Sending Tip Result
+
+```bash
+2020-11-08T18:37:52.323Z INFO  qocli::nodeclient::protocols::mux_protocol > Connecting to 123.123.123.12:3001
+2020-11-08T18:37:52.358Z WARN  qocli::nodeclient::protocols::transaction_protocol > TxSubmissionProtocol::State::Done
+2020-11-08T18:37:52.358Z WARN  qocli::nodeclient::protocols::chainsync_protocol   > rollback to slot: 4492799
+2020-11-08T18:37:52.359Z WARN  qocli::nodeclient::protocols::chainsync_protocol   > rollback to slot: 13294373
+2020-11-08T18:37:54.402Z INFO  qocli::nodeclient::protocols::chainsync_protocol   > Pooltool (TCKR, a7398d64): (4925270, 4d65b09dc1d5c6c2), json: {"success":true,"message":null}
+2020-11-08T18:38:36.323Z INFO  qocli::nodeclient::protocols::chainsync_protocol   > Pooltool (TCKR, a7398d64): (4925271, 47d6beb189f24c9e), json: {"success":true,"message":null}
+2020-11-08T18:38:37.424Z INFO  qocli::nodeclient::protocols::chainsync_protocol   > Pooltool (TCKR, a7398d64): (4925272, defe4ba88985c305), json: {"success":true,"message":null}
+ ...
+ ...
+```
+
+### Sendslots command
+
+The sendslots command securely sends pooltool the number of slots you have assigned for an epoch and validates the correctness of your past epochs. You must have a synchronized ```qocli.db``` database and have calculated leader logs for every pool in ```pooltool.json``` before calling this command. It should be called within the first 10 minutes of the epoch cutover.
+
+**Note**: to automate sending your pool assigned slots to [PoolTool](https://pooltool.io/), please refer to the [installation guide](INSTALL.md).
+
+#### Sendslots help
+
+```bash
+qocli sendslots --help
+qocli-sendslots 0.3.1
+
+USAGE:
+    qocli sendslots [OPTIONS] --byron-genesis <byron-genesis> --sophie-genesis <sophie-genesis>
+
+FLAGS:
+    -h, --help       Prints help information
+    -V, --version    Prints version information
+
+OPTIONS:
+        --byron-genesis <byron-genesis>        byron genesis json file
+        --config <config>                      pooltool config file for sending slots [default: ./pooltool.json]
+    -d, --db <db>                              sqlite database file [default: ./qocli.db]
+        --sophie-genesis <sophie-genesis>    sophie genesis json file
+```
+
+#### Sendslots Success
+
+```bash
+qocli sendslots --byron-genesis ~/haskell/local/byron-genesis.json --sophie-genesis ~/haskell/local/sophie-genesis.json
+```
+
+##### Sendslots success Result
+
+```text
+2020-12-01T03:34:33.883Z INFO  qocli::nodeclient::leaderlog > Sending: {"apiKey":"d67822d0-0008-4eb5-9e1e-9c30bdb8d82d","poolId":"00beef0a9be2f6d897ed24a613cf547bb20cd282a04edfc53d477114","epoch":232,"slotQty":25,"hash":"d15b6c8d4c81fe48cff0650c5b59ab20da9765374c58c933dacd058eb38bb670"}
+2020-12-01T03:34:33.969Z INFO  qocli::nodeclient::leaderlog > Pooltool Response: {"statusCode":200,"headers":{"Content-Type":"application/json","Access-Control-Allow-Origin":"*"},"body":"{\"success\":true,\"message\":\"We have updated your assigned slots for epoch 232 to be 25 with a hash of d15b6c8d4c81fe48cff0650c5b59ab20da9765374c58c933dacd058eb38bb670.  You must provide an array of slots that matches this hash to have your performance counted.\"}"}
+2020-12-01T03:34:33.971Z INFO  qocli::nodeclient::leaderlog > Sending: {"apiKey":"d67822d0-0008-4eb5-9e1e-9c30bdb8d82d","poolId":"00beef8710427e328a29555283c74b202b40bec9a62630a9f03b1e18","epoch":232,"slotQty":24,"hash":"97655646efcfe8a569508d70e6fc46135488fc5600bb95233c3f005106a7f5a3"}
+2020-12-01T03:34:34.051Z INFO  qocli::nodeclient::leaderlog > Pooltool Response: {"statusCode":200,"headers":{"Content-Type":"application/json","Access-Control-Allow-Origin":"*"},"body":"{\"success\":true,\"message\":\"We have updated your assigned slots for epoch 232 to be 24 with a hash of 97655646efcfe8a569508d70e6fc46135488fc5600bb95233c3f005106a7f5a3.  You must provide an array of slots that matches this hash to have your performance counted.\"}"}
+2020-12-01T03:34:34.053Z INFO  qocli::nodeclient::leaderlog > Sending: {"apiKey":"d67822d0-0008-4eb5-9e1e-9c30bdb8d82d","poolId":"00beef9385526062d41cd7293746048c6a9a13ab8b591920cf40c706","epoch":232,"slotQty":54,"hash":"f12dff6eb3786d04cb2d7f666e92876faa7d5f2a26de77d3affc1aaffa6d81a5"}
+2020-12-01T03:34:34.149Z INFO  qocli::nodeclient::leaderlog > Pooltool Response: {"statusCode":200,"headers":{"Content-Type":"application/json","Access-Control-Allow-Origin":"*"},"body":"{\"success\":true,\"message\":\"We have updated your assigned slots for epoch 232 to be 54 with a hash of f12dff6eb3786d04cb2d7f666e92876faa7d5f2a26de77d3affc1aaffa6d81a5.  You must provide an array of slots that matches this hash to have your performance counted.\"}"}
+2020-12-01T03:34:34.150Z INFO  qocli::nodeclient::leaderlog > Sending: {"apiKey":"d67822d0-0008-4eb5-9e1e-9c30bdb8d82d","poolId":"00beef284975ef87856c1343f6bf50172253177fdebc756524d43fc1","epoch":232,"slotQty":42,"hash":"30c92d028c99af5ca51dd58293a575b14671d56cd6c846bd1c21126a2addd9ac"}
+2020-12-01T03:34:34.222Z INFO  qocli::nodeclient::leaderlog > Pooltool Response: {"statusCode":200,"headers":{"Content-Type":"application/json","Access-Control-Allow-Origin":"*"},"body":"{\"success\":true,\"message\":\"We have updated your assigned slots for epoch 232 to be 42 with a hash of 30c92d028c99af5ca51dd58293a575b14671d56cd6c846bd1c21126a2addd9ac.  You must provide an array of slots that matches this hash to have your performance counted.\"}"}
+```
+
+### Sign Command
+
+This command signs an arbitrary message string with the pool's vrf.skey. The output signature can be used to verify that the message came from the pool operator.
+
+#### Show Sign Help
+
+```bash
+$ qocli sign --help
+qocli-sign 3.1.0
+
+USAGE:
+    qocli sign --message <message> --pool-vrf-skey <pool-vrf-skey>
+
+FLAGS:
+    -h, --help       Prints help information
+    -V, --version    Prints version information
+
+OPTIONS:
+        --message <message>                text message to sign
+        --pool-vrf-skey <pool-vrf-skey>    pool's vrf.skey file
+```
+
+#### Sign a message
+
+```bash
+$ qocli sign --message "pooltool.io" --pool-vrf-skey pool.vrf.skey
+```
+
+##### Sign Result
+
+```bash
+{
+  "status": "ok",
+  "signature": "8aff63e961aad02852dbb7905f9215d7b1d4ff63f734f7f1b82184004112cca798719941ccf54beca360f844632c2c070e6f8ef11ca177efa240c712ef3d7e9f283db68278088acbe1af381cc9673e08"
+}
+```
+
+### Verify Command
+
+This command verifies the signature that was used to sign an arbitrary message string with the pool's vrf.skey. This command validates that the message came from the pool operator.
+
+#### Show Verify Help
+
+```bash
+$ qocli verify --help
+qocli-verify 3.1.0
+
+USAGE:
+    qocli verify --message <message> --pool-vrf-vkey <pool-vrf-vkey> --pool-vrf-vkey-hash <pool-vrf-vkey-hash> --signature <signature>
+
+FLAGS:
+    -h, --help       Prints help information
+    -V, --version    Prints version information
+
+OPTIONS:
+        --message <message>                          text message to verify
+        --pool-vrf-vkey <pool-vrf-vkey>              pool's vrf.vkey file
+        --pool-vrf-vkey-hash <pool-vrf-vkey-hash>
+            pool's vrf hash in hex retrieved from 'bcc-cli query pool-params...'
+
+        --signature <signature>                      signature to verify in hex
+```
+
+#### Verify a message
+
+```bash
+$ qocli verify --message "pooltool.io" --pool-vrf-vkey pool.vrf.vkey --pool-vrf-vkey-hash f58bf0111f8e9b233c2dcbb72b5ad400330cf260c6fb556eb30cefd387e5364c --signature 8aff63e961aad02852dbb7905f9215d7b1d4ff63f734f7f1b82184004112cca798719941ccf54beca360f844632c2c070e6f8ef11ca177efa240c712ef3d7e9f283db68278088acbe1af381cc9673e08
+```
+
+##### Verify Result
+
+```bash
+{
+  "status": "ok"
+}
+```
